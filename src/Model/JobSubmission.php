@@ -4,14 +4,21 @@ namespace Dynamic\Jobs\Model;
 
 use Dynamic\Jobs\Forms\SimpleHtmlEditorField;
 use SilverStripe\Assets\File;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\DateField;
 use SilverStripe\Forms\EmailField;
+use SilverStripe\Forms\FieldGroup;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FileField;
+use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDate;
+use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\Security\Permission;
 
 /**
@@ -171,22 +178,65 @@ class JobSubmission extends DataObject
         $fields = parent::getCMSFields();
 
         $fields->removeByName([
+            'Available',
             'JobID',
+            'Resume',
+            'Email',
+            'FirstName',
+            'LastName',
+            'Email',
+            'Phone',
+            'Content',
         ]);
 
-        $fields->insertBefore(
-            ReadonlyField::create('JobTitle', 'Job', $this->Job()->getTitle()),
-            'Content'
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                TextField::create('JobTitle')
+                    ->setValue(
+                        DBField::create_field(
+                            'HTMLText',
+                            '<a href="' . $this->Job()->AbsoluteLink() . '" target="_blank">' . $this->Job()->Title . '</a>'
+                        )
+                    )
+                    ->performReadonlyTransformation(),
+                FieldGroup::create(
+                    'Applicant',
+                    TextField::create('FirstName')
+                        ->setTitle('First Name')
+                        ->performReadonlyTransformation(),
+                    TextField::create('LastName')
+                        ->setTitle('Last Name')
+                        ->performReadonlyTransformation()
+                ),
+                FieldGroup::create(
+                    'Applicant Contact Information',
+                    TextField::create('EmailLink')
+                        ->setValue(DBField::create_field('HTMLText',
+                            '<a href="mailto:' . $this->Email . '">' . $this->Email . '</a>'))
+                        ->setTitle('Email')
+                        ->performReadonlyTransformation(),
+                    TextField::create('Phone')
+                        ->setTitle('Phone Number')
+                        ->performReadonlyTransformation()
+                ),
+                TextField::create('Availability')
+                    ->setValue(DBField::create_field('Date', $this->Available)->Nice())
+                    ->setTitle('Availablity Starting')
+                    ->performReadonlyTransformation(),
+                'Application Information',
+                HTMLEditorField::create('Content')
+                    ->setTitle('Cover Letter')
+                    ->performReadonlyTransformation(),
+                TextField::create('ApplicationLink')
+                    ->setValue(DBField::create_field('HTMLText',
+                        '<a href="' . $this->Resume()->AbsoluteLink() . '" target="_blank">Application File</a>'))
+                    ->setTitle('Application')
+                    ->performReadonlyTransformation(),
+            ]
         );
 
-        $fields->insertBefore(
-            ReadonlyField::create('Created', 'Application Date', $this->dbObject('Created')->FormatFromSettings()),
-            'Content'
-        );
-
-        $resume = $fields->dataFieldByName('Resume')
-            ->setFolderName('Uploads/Resumes');
-        $fields->insertBefore($resume, 'Content');
+        $fields->fieldByName('Root.Main')->setTitle('Applicant Information');
 
         return $fields;
     }

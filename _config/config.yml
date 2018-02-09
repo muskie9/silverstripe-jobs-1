@@ -6,3 +6,6 @@ Dynamic\Jobs\Model\JobCollectionController:
   extensions:
     - Dynamic\Collection\CollectionExtension
     - Dynamic\Jobs\Extensions\JobCollectionExtension
+SilverStripe\Security\Group:
+  extensions:
+    - Dynamic\Jobs\Extensions\JobsGroupDataExtension

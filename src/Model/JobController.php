@@ -5,6 +5,7 @@ namespace Dynamic\Jobs\Model;
 use PageController;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Email\Email;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FileField;
 use SilverStripe\Forms\Form;
@@ -58,9 +59,7 @@ class JobController extends PageController
      */
     public function JobApp()
     {
-        $App = singleton(JobSubmission::class);
-
-        $fields = $App->getFrontEndFields();
+        $fields = JobSubmission::singleton()->getFrontEndFields();
 
         $actions = FieldList::create(
             new FormAction('doApply', 'Apply')
@@ -83,7 +82,7 @@ class JobController extends PageController
      */
     public function doApply(array $data, Form $form)
     {
-        $entry = new JobSubmission();
+        $entry = JobSubmission::create();
         $form->saveInto($entry);
 
         $entry->JobID = $this->ID;

@@ -41,7 +41,6 @@ class JobCollection extends Page
     private static $db = [
         'Message' => 'HTMLText',
         'FromAddress' => 'Varchar(255)',
-        'EmailRecipient' => 'Varchar(255)',
         'EmailSubject' => 'Varchar(255)',
     ];
 
@@ -50,6 +49,13 @@ class JobCollection extends Page
      */
     private static $has_one = [
         'Application' => File::class,
+    ];
+
+    /**
+     * @var array
+     */
+    private static $owns = [
+        'Application',
     ];
 
     /**
@@ -77,7 +83,6 @@ class JobCollection extends Page
 
         $fields->addFieldsToTab('Root.Configuration', [
             EmailField::create('FromAddress', 'Submission From Address'),
-            EmailField::create('EmailRecipient', 'Submission Recipient'),
             TextField::create('EmailSubject', 'Submission Email Subject Line'),
             HTMLEditorField::create('Message', 'Submission Message'),
         ]);
@@ -91,16 +96,7 @@ class JobCollection extends Page
     public function validate()
     {
         $result = parent::validate();
-        // TODO - this bugs out and won't create the page if it is in
-        /*
-                if(!$this->EmailRecipient) {
-                    $result->addError('Please enter Email Recipient before saving.');
-                }
 
-                if(!$this->EmailSubject) {
-                    $result->addError('Please enter Email Subject before saving.');
-                }
-                */
         return $result;
     }
 
@@ -109,12 +105,15 @@ class JobCollection extends Page
      */
     public function getPostedJobs()
     {
+        $now = DBDatetime::now();
+
         $jobs = Job::get()
             ->filter([
-                'PostDate:LessThanOrEqual' => DBDatetime::now(),
-                'EndPostDate:GreaterThanOrEqual' => DBDatetime::now(),
+                'PostDate:LessThanOrEqual' => $now,
+                'EndPostDate:GreaterThanOrEqual' => $now,
             ])
             ->sort('PostDate DESC');
+
         return $jobs;
     }
 }
